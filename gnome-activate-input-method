@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+input_sources_json = `gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell --method org.gnome.Shell.Eval "imports.ui.status.keyboard.getInputSourceManager().inputSources"`.gsub(/^\(true, '/,'').gsub(/'\)$/, "")
+input_sources = JSON.parse input_sources_json
+
+input_idx = ARGV.first
+
+if input_sources.keys.include? input_idx
+  system *%w(
+    gdbus call --session
+    --dest org.gnome.Shell
+    --object-path /org/gnome/Shell
+    --method org.gnome.Shell.Eval
+  ), "imports.ui.status.keyboard.getInputSourceManager().inputSources[#{input_idx}].activate()"
+else
+  print "\nPlease specify input source index:\n\n"
+  input_sources.each do |k,v| 
+    puts "#{k}: \"#{v["displayName"]}\" (type: #{v["type"]}, id: #{v["id"]})"
+  end
+  puts
+  exit 1
+end
